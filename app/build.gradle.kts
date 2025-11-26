@@ -10,7 +10,7 @@ android {
 
     defaultConfig {
         applicationId = "com.salty.payslip"
-        minSdk = 24
+        minSdk = 26 //24
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -61,39 +61,10 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.filament.android)
+    implementation(libs.androidx.material3.android)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-
-
-    // For reading Excel files
-//    implementation("org.apache.poi:poi:5.2.3")
-//    implementation("org.apache.poi:poi-ooxml:5.2.3")
-//
-//    // For file picker - updated version
-//    implementation("com.github.dhaval2404:imagepicker:2.1")
-//
-//    // For permissions
-//    implementation("com.karumi:dexter:6.2.3")
-//
-//    // For displaying data in table
-//    implementation("androidx.recyclerview:recyclerview:1.3.2")
-//
-//    // Add these if not already present
-//    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
-//    implementation("androidx.activity:activity-ktx:1.8.2")
-
-
-//    // Alternative: Use a simpler Excel reader library
-//    implementation("com.github.andruhon:Android5xLS:1.0")
-//
-//    // Or use CSV reader only (simpler approach)
-//    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2")
-//
-//    // Keep the rest of your dependencies
-//    implementation("com.github.dhaval2404:imagepicker:2.1")
-//    implementation("com.karumi:dexter:6.2.3")
-//    implementation("androidx.recyclerview:recyclerview:1.3.2")
 
     ///*************new approach
 
@@ -108,5 +79,21 @@ dependencies {
     // Add Navigation Safe Args
     implementation("androidx.navigation:navigation-fragment-ktx:2.7.7")
     implementation("androidx.navigation:navigation-ui-ktx:2.7.7")
+
+    //
+    // Source - https://stackoverflow.com/a/66379939
+    // Posted by Aman Pasricha
+    // Retrieved 2025-11-25, License - CC BY-SA 4.0
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
+    implementation("com.github.doyaaaaaken:kotlin-csv-jvm:1.9.2")
+//    implementation("com.github.SUPERCILEX.poi-android:poi:5.2.3")
+//*******cloud Ai
+    implementation("org.apache.xmlbeans:xmlbeans:5.1.1")
+    implementation("org.apache.commons:commons-compress:1.21")
+    implementation("org.apache.commons:commons-collections4:4.4")
+    implementation("org.apache.poi:poi:5.2.3")
+    implementation("org.apache.poi:poi-ooxml:5.2.3")
+
+
 
 }
