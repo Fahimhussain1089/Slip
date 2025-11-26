@@ -361,18 +361,28 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center"
-                android:layout_weight="1"
-                android:background="@color/red">
+                android:layout_marginTop="16dp">
 
-                <TextView
-                    android:layout_width="wrap_content"
+                <Button
+                    android:id="@+id/btnExportCsv"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="Export Data"
-                    android:adjustViewBounds="true"
-                    android:padding="4dp"
-                    android:textSize="24sp"
-                    android:textColor="@color/white" />
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:text="Export CSV"
+                    android:backgroundTint="@color/red" />
+
+                <Button
+                    android:id="@+id/btnExportExcel"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="8dp"
+                    android:text="Export Excel"
+                    android:backgroundTint="@color/green" />
+
             </LinearLayout>
+
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
