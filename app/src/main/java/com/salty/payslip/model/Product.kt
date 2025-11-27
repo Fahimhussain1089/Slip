@@ -37,3 +37,13 @@ data class ProductItem(
     val quantity: Int = 0,
     val hsnCode: String = ""
 ) : Parcelable
+
+@Parcelize
+data class DynamicProduct(
+    val clientName: String,
+    val productName: String,
+    val hsnCode: String,
+    val quantity: Int,
+    val totalPrice: String,
+    val rate: Double
+) : Parcelable
