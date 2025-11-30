@@ -2,6 +2,7 @@ package com.salty.payslip.Fragment
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
@@ -39,12 +40,18 @@ import org.apache.poi.common.usermodel.HyperlinkType
 import org.apache.poi.xssf.usermodel.XSSFCellStyle
 import java.io.FileOutputStream
 import android.app.AlertDialog
+import android.content.Intent
+import android.net.Uri
 import android.text.Editable
 import android.text.TextWatcher
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
 import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Switch
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import com.google.android.material.textfield.TextInputEditText
 import com.salty.payslip.model.DynamicProduct
@@ -85,7 +92,7 @@ class SecondFragment : Fragment() {
 
     companion object {
         private const val STORAGE_PERMISSION_CODE = 1001
-        private const val TAG = "SecondFragment"
+        const val TAG = "SecondFragment"
     }
 
     override fun onCreateView(
@@ -95,6 +102,269 @@ class SecondFragment : Fragment() {
         _binding = FragmentSecondBinding.inflate(inflater, container, false)
         return binding.root
     }
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.menu_main, menu)
+        super.onCreateOptionsMenu(menu, inflater)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_upload_client -> {
+                openFilePicker("client")
+                true
+            }
+            R.id.menu_upload_product -> {
+                openFilePicker("product")
+                true
+            }
+            R.id.menu_clear_data -> {
+                clientList.clear()
+                productList.clear()
+                selectedClient = null
+                selectedProduct = null
+                sectionSelectedClients.clear()
+                sectionSelectedProducts.clear()
+                // Optional: Clear UI fields if needed
+                binding.ClientName.text = "Client Name"
+                binding.descriptionText.text = "Description of Good"
+                Toast.makeText(requireContext(), "All data cleared", Toast.LENGTH_SHORT).show()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                readFileFromUri(uri)
+            }
+        }
+    }
+
+    //***************reuse file start
+//    private fun openFilePicker(fileType: String) {
+//        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+//            type = "*/*"
+//            addCategory(Intent.CATEGORY_OPENABLE)
+//
+//            val mimeTypes = arrayOf(
+//                "text/csv",
+//                "text/comma-separated-values"
+//            )
+//            putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+//        }
+//
+//        filePickerLauncher.launch(Intent.createChooser(intent, "Select ${fileType.capitalize()} CSV File"))
+//    }
+
+    private fun getFileName(uri: Uri): String {
+        return try {
+            uri.toString().substringAfterLast("/")
+        } catch (e: Exception) {
+            "unknown"
+        }
+    }
+    private fun detectFileType(fileName: String): String {
+        return when {
+            fileName.contains("client", ignoreCase = true) -> "client"
+            fileName.contains("product", ignoreCase = true) -> "product"
+            fileName.contains("customer", ignoreCase = true) -> "client"
+            else -> "auto"
+        }
+    }
+    private fun readFileContent(inputStream: java.io.InputStream, fileType: String, fileName: String) {
+        try {
+            // Read all lines first and store them
+            val lines = inputStream.bufferedReader().use { it.readLines() }
+
+            when (fileType) {
+                "client" -> processClientData(lines, fileName)
+                "product" -> processProductData(lines, fileName)
+                else -> autoDetectAndProcessData(lines, fileName)
+            }
+
+//            updateDisplayItems()
+//            updateUI()
+        } catch (e: Exception) {
+            showMessage("Error processing file: ${e.message}")
+        }
+    }
+    private fun processClientData(lines: List<String>, fileName: String) {
+        if (lines.isEmpty()) {
+            showMessage("File is empty")
+            return
+        }
+
+        val newClients = mutableListOf<Client>()
+
+        // Check if header exists
+        val firstLine = lines[0].lowercase()
+        val hasHeader = firstLine.contains("name") || firstLine.contains("client") || firstLine.contains("email")
+
+        val startIndex = if (hasHeader) 1 else 0
+
+        for (i in startIndex until lines.size) {
+            try {
+                val line = lines[i].trim()
+                if (line.isEmpty()) continue
+
+                // Handle different separators: comma, pipe, or tab
+                val columns = when {
+                    line.contains("|") -> line.split("|").map { it.trim() }
+                    line.contains("\t") -> line.split("\t").map { it.trim() }
+                    else -> line.split(",").map { it.trim() }
+                }
+
+                if (columns[0].isEmpty()) continue
+
+                val client = when (columns.size) {
+                    1 -> Client(name = columns[0])
+                    2 -> Client(name = columns[0], email = columns[1])
+                    3 -> Client(name = columns[0], email = columns[1], phone = columns[2])
+                    else -> Client(name = columns[0])
+                }
+                newClients.add(client)
+            } catch (e: Exception) {
+                // Skip invalid rows but continue processing
+                continue
+            }
+        }
+
+        if (newClients.isNotEmpty()) {
+            clientList.addAll(newClients)
+            showMessage("✅ Added ${newClients.size} clients from $fileName")
+        } else {
+            showMessage("No valid client data found in $fileName")
+        }
+    }
+    private fun processProductData(lines: List<String>, fileName: String) {
+        if (lines.isEmpty()) {
+            showMessage("File is empty")
+            return
+        }
+
+        val newProducts = mutableListOf<ProductItem>()
+
+        // Check if header exists
+        val firstLine = lines[0].lowercase()
+        val hasHeader = firstLine.contains("product") || firstLine.contains("name") || firstLine.contains("price") || firstLine.contains("description")
+
+        val startIndex = if (hasHeader) 1 else 0
+
+        for (i in startIndex until lines.size) {
+            try {
+                val line = lines[i].trim()
+                if (line.isEmpty()) continue
+
+                // Handle different separators: comma, pipe, or tab
+                val columns = when {
+                    line.contains("|") -> line.split("|").map { it.trim() }
+                    line.contains("\t") -> line.split("\t").map { it.trim() }
+                    else -> line.split(",").map { it.trim() }
+                }
+
+                if (columns[0].isEmpty()) continue
+
+                val product = when (columns.size) {
+                    1 -> ProductItem(name = columns[0])
+                    2 -> ProductItem(name = columns[0], description = columns[1])
+                    3 -> ProductItem(
+                        name = columns[0],
+                        description = columns[1],
+                        price = columns[2].toDoubleOrNull() ?: 0.0
+                    )
+                    4 -> ProductItem(
+                        name = columns[0],
+                        description = columns[1],
+                        price = columns[2].toDoubleOrNull() ?: 0.0,
+                        quantity = columns[3].toIntOrNull() ?: 0
+                    )
+                    else -> ProductItem(name = columns[0])
+                }
+                newProducts.add(product)
+            } catch (e: Exception) {
+                // Skip invalid rows but continue processing
+                continue
+            }
+        }
+
+        if (newProducts.isNotEmpty()) {
+            productList.addAll(newProducts)
+            showMessage("✅ Added ${newProducts.size} products from $fileName")
+        } else {
+            showMessage("No valid product data found in $fileName")
+        }
+    }
+    private fun autoDetectAndProcessData(lines: List<String>, fileName: String) {
+        if (lines.isEmpty()) {
+            showMessage("File is empty")
+            return
+        }
+
+        val firstLine = lines[0].lowercase()
+
+        // Simple detection logic based on content
+        val isLikelyProduct = lines.any { line ->
+            val columns = line.split(",").map { it.trim() }
+            columns.size >= 3 && columns[2].toDoubleOrNull() != null
+        }
+
+        when {
+            firstLine.contains("product") || firstLine.contains("price") || isLikelyProduct -> {
+                processProductData(lines, fileName)
+            }
+            firstLine.contains("client") || firstLine.contains("customer") -> {
+                processClientData(lines, fileName)
+            }
+            else -> {
+                // Default to client if we can't determine
+                processClientData(lines, fileName)
+            }
+        }
+    }
+    private fun showMessage(message: String) {
+//        binding.textviewFirst.text = message
+//        binding.textviewFirst.visibility = View.VISIBLE
+        Toast.makeText(requireContext(), message, Toast.LENGTH_SHORT).show()
+    }
+    private fun openFilePicker(fileType: String) {
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "*/*"
+            addCategory(Intent.CATEGORY_OPENABLE)
+
+            val mimeTypes = arrayOf(
+                "text/csv",
+                "text/comma-separated-values"
+            )
+            putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes)
+        }
+
+        filePickerLauncher.launch(Intent.createChooser(intent, "Select ${fileType.capitalize()} CSV File"))
+    }
+    private fun readFileFromUri(uri: Uri) {
+        try {
+            // Get file name to help with detection
+            val fileName = getFileName(uri)
+            val fileType = detectFileType(fileName)
+
+            requireContext().contentResolver.openInputStream(uri)?.use { inputStream ->
+                readFileContent(inputStream, fileType, fileName)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            showMessage("Error reading file: ${e.message}")
+        }
+    }
+
+
+
+
+    //***************reuse file End
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -117,16 +387,17 @@ class SecondFragment : Fragment() {
         setupExportButtons()
 
         binding.buttonSecond.setOnClickListener {
-            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
+//            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
+            findNavController().navigate(R.id.action_SecondFragment_to_thirdActivity)
         }
         //*******************
         binding.lyNewproductadd.setOnClickListener {
             addNewProductSection()
         }
 
-        binding.buttonSecond.setOnClickListener {
-            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
-        }
+//        binding.buttonSecond.setOnClickListener {
+//            findNavController().navigate(R.id.action_SecondFragment_to_FirstFragment)
+//        }
         // Setup click listener to close dropdowns when clicking outside
         binding.root.setOnClickListener {
             // Close all main dropdowns
@@ -1061,6 +1332,7 @@ class SecondFragment : Fragment() {
 //        }
 //    }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private fun saveCSVUsingMediaStore() {
         try {
             val dynamicProducts = getAllProductData()
