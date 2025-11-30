@@ -6,4 +6,10 @@
     </style>
 
     <style name="Theme.Payslip" parent="Base.Theme.Payslip" />
+
+    <style name="Theme.Payslip.NoActionBar" parent="Theme.Payslip">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
 </resources>

@@ -20,8 +20,22 @@
         android:name="com.salty.payslip.Fragment.SecondFragment"
         android:label="@string/second_fragment_label"
         tools:layout="@layout/fragment_second">
+<!--        <action-->
+<!--            android:id="@+id/action_SecondFragment_to_FirstFragment"-->
+<!--            app:destination="@id/FirstFragment" />-->
         <action
-            android:id="@+id/action_SecondFragment_to_FirstFragment"
-            app:destination="@id/FirstFragment" />
+            android:id="@+id/action_SecondFragment_to_thirdActivity"
+            app:destination="@id/thirdActivity" />
+        <action
+            android:id="@+id/action_SecondFragment_to_thirdActivity2"
+            app:destination="@id/thirdActivity" />
     </fragment>
+
+    <activity
+        android:id="@+id/thirdActivity"
+        android:name="com.salty.payslip.Activity.ThirdActivity"
+        android:label="third Activity"
+        tools:layout="@layout/activity_third"
+        />
+
 </navigation>

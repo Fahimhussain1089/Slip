@@ -3,6 +3,10 @@ package com.salty.payslip.model
 import android.os.Parcelable
 import kotlinx.parcelize.Parcelize
 
+
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+
 // Product.kt
 
 //data class Client(
@@ -22,22 +26,22 @@ import kotlinx.parcelize.Parcelize
 //)
 
 //****** different file upload **********
-@Parcelize
-data class Client(
-    val name: String,
-    val email: String = "",
-    val phone: String = ""
-) : Parcelable
-
-@Parcelize
-data class ProductItem(
-    val name: String,
-    val description: String = "",
-    val price: Double = 0.0,
-    val quantity: Int = 0,
-    val hsnCode: String = ""
-) : Parcelable
-
+//@Parcelize
+//data class Client(
+//    val name: String,
+//    val email: String = "",
+//    val phone: String = ""
+//) : Parcelable
+//
+//@Parcelize
+//data class ProductItem(
+//    val name: String,
+//    val description: String = "",
+//    val price: Double = 0.0,
+//    val quantity: Int = 0,
+//    val hsnCode: String = ""
+//) : Parcelable
+//
 @Parcelize
 data class DynamicProduct(
     val clientName: String,
@@ -46,4 +50,22 @@ data class DynamicProduct(
     val quantity: Int,
     val totalPrice: String,
     val rate: Double
+) : Parcelable
+
+@Entity(tableName = "clients")
+@Parcelize
+data class Client(
+    @PrimaryKey val name: String,
+    val email: String = "",
+    val phone: String = ""
+) : Parcelable
+
+@Entity(tableName = "products")
+@Parcelize
+data class ProductItem(
+    @PrimaryKey val name: String,
+    val description: String = "",
+    val price: Double = 0.0,
+    val quantity: Int = 0,
+    val hsnCode: String = ""
 ) : Parcelable
